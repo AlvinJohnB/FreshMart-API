@@ -12,7 +12,6 @@ module.exports.registerUser = async (req, res) => {
     .then((existingUser) => {
       if (existingUser) {
         return res.status(400).json({
-          success: false,
           message: "User already exists",
         });
       }
@@ -34,7 +33,6 @@ module.exports.registerUser = async (req, res) => {
     .save()
     .then(() => {
       return res.status(201).json({
-        success: true,
         message: "Registered successfully",
       });
     })
@@ -48,7 +46,6 @@ module.exports.loginUser = async (req, res) => {
 
   if (!email || !password) {
     return res.status(400).json({
-      success: false,
       message: "Please provide email and password",
     });
   }
@@ -95,9 +92,8 @@ module.exports.userDetails = (req, res) => {
   return User.findById(req.user.id)
     .then((user) => {
       if (user === null)
-        return res
-          .status(400)
-          .send({ message: "User not found" }); // 400 bad request
+        return res.status(400).send({ message: "User not found" });
+      // 400 bad request
       else {
         user.password = "";
         return res.status(200).send(user); // 200 ok for successful retrieval
