@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
+const { errorHandler } = require("./middleware/errorHandler");
 
 // Initialize express app
 const app = express();
@@ -21,6 +22,9 @@ mongoose
 
 // Routes
 app.use("/users", userRoutes);
+
+// Error Handling Middleware
+app.use(errorHandler);
 
 if (require.main === module) {
   app.listen(process.env.PORT || 3000, () => {

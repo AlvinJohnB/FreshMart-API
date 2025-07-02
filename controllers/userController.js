@@ -50,11 +50,9 @@ module.exports.loginUser = async (req, res) => {
     });
   }
 
-  //   Check if email is valid
-  if (!email.includes("@") && !email.includes(".")) {
-    return res.status(400).json({
-      error: "Invalid email.",
-    });
+  //   Check if email is valid email format
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    return res.status(400).json({ error: "Invalid email." });
   } else {
     User.findOne({ email }).then((user) => {
       if (!user) {
@@ -85,7 +83,8 @@ module.exports.loginUser = async (req, res) => {
 
 // s51
 module.exports.userDetails = (req, res) => {
-  if (req.body.id !== req.user.id) {
+  console.log("User ID from request:", req.user.id);
+  if (!req.user.id) {
     return res.status(404).send({ message: "User not found" }); // 404 not found
   }
 
@@ -106,7 +105,7 @@ module.exports.userDetails = (req, res) => {
 // s51
 module.exports.makeAdmin = async (req, res) => {
   try {
-    const userToUpdate = await User.findById(req.body.id);
+    const userToUpdate = await User.findById(req.params.id);
     if (!userToUpdate)
       return res.status(404).json({ message: "User not found" });
 
@@ -117,13 +116,13 @@ module.exports.makeAdmin = async (req, res) => {
       .status(200)
       .json({ message: `${userToUpdate.firstName} is now an admin.` });
   } catch (error) {
-    return res.status(500).json({ message: "Server error", error });
+    return errorHandler(error, req, res);
   }
 };
 // s51
 
 // s51
-module.exports.resetPassword = async (req, res) => {
+module.exports.updatePassword = async (req, res) => {
   try {
     const userId = req.user.id; // assumes verify middleware attaches the decoded token to req.user
     const { newPassword } = req.body;
@@ -146,8 +145,8 @@ module.exports.resetPassword = async (req, res) => {
 
     res.status(200).json({ message: "Password successfully updated." });
   } catch (error) {
-    console.error("Password reset error:", error);
-    res.status(500).json({ message: "Internal server error." });
+    console.error("Password update error:", error);
+    return errorHandler(error, req, res);
   }
 };
 // s51
