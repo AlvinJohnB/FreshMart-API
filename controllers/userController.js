@@ -5,40 +5,34 @@ const { createAccessToken } = require("../middleware/auth");
 
 // Register a new user
 module.exports.registerUser = async (req, res) => {
-  const { firstName, lastName, email, password, mobileNo } = req.body;
+  try {
+    const { firstName, lastName, email, password, mobileNo } = req.body;
 
-  //   Check if user already exists
-  User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser) {
-        return res.status(400).json({
-          message: "User already exists",
-        });
-      }
-    })
-    .catch((error) => {
-      return errorHandler(error, req, res);
-    });
-
-  //   Create new user
-  const newUser = new User({
-    firstName,
-    lastName,
-    email,
-    password: await bcrypt.hash(password, 10),
-    mobileNo,
-  });
-
-  newUser
-    .save()
-    .then(() => {
-      return res.status(201).json({
-        message: "Registered successfully",
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists",
       });
-    })
-    .catch((error) => {
-      return errorHandler(error, req, res);
+    }
+
+    // Create new user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      mobileNo,
     });
+
+    await newUser.save();
+    return res.status(201).json({
+      message: "Registered successfully",
+    });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
 };
 
 module.exports.loginUser = async (req, res) => {
@@ -54,30 +48,34 @@ module.exports.loginUser = async (req, res) => {
   if (!/\S+@\S+\.\S+/.test(email)) {
     return res.status(400).json({ error: "Invalid email." });
   } else {
-    User.findOne({ email }).then((user) => {
-      if (!user) {
-        return res.status(404).json({
-          error: "No Email Found",
-        });
-      } else {
-        //   Check if password matches
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-          if (err) {
-            return errorHandler(err, req, res);
-          }
-          if (!isMatch) {
-            return res.status(400).json({
-              error: "Email and password does not match",
-            });
-          } else {
-            const accessToken = createAccessToken(user);
-            return res.status(200).json({
-              access: accessToken,
-            });
-          }
-        });
-      }
-    });
+    User.findOne({ email })
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({
+            error: "No Email Found",
+          });
+        } else {
+          //   Check if password matches
+          bcrypt.compare(password, user.password, (err, isMatch) => {
+            if (err) {
+              return errorHandler(err, req, res);
+            }
+            if (!isMatch) {
+              return res.status(400).json({
+                error: "Email and password does not match",
+              });
+            } else {
+              const accessToken = createAccessToken(user);
+              return res.status(200).json({
+                access: accessToken,
+              });
+            }
+          });
+        }
+      })
+      .catch((error) => {
+        return errorHandler(error, req, res);
+      });
   }
 };
 
