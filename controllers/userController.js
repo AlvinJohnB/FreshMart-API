@@ -44,6 +44,11 @@ module.exports.loginUser = async (req, res) => {
     });
   }
 
+  if (password.length < 8) {
+    return res.status(400).json({
+      message: "Password must be at least 8 characters.",
+    });
+  }
   //   Check if email is valid email format
   if (!/\S+@\S+\.\S+/.test(email)) {
     return res.status(400).json({ error: "Invalid email." });
@@ -65,7 +70,7 @@ module.exports.loginUser = async (req, res) => {
                 error: "Email and password does not match",
               });
             } else {
-              console.log(user)
+              console.log(user);
               const accessToken = createAccessToken(user);
               return res.status(200).json({
                 access: accessToken,
@@ -105,15 +110,12 @@ module.exports.userDetails = (req, res) => {
 module.exports.makeAdmin = async (req, res) => {
   try {
     const userToUpdate = await User.findById(req.params.id);
-    if (!userToUpdate)
-      return res.status(404).json({ message: "User not found" });
+    if (!userToUpdate) return res.status(404).json({ error: "User not found" });
 
     userToUpdate.isAdmin = true;
     await userToUpdate.save();
 
-    return res
-      .status(200)
-      .json({ message: `${userToUpdate.firstName} is now an admin.` });
+    return res.status(200).json({ updatedUser: userToUpdate });
   } catch (error) {
     return errorHandler(error, req, res);
   }
@@ -142,7 +144,7 @@ module.exports.updatePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    res.status(200).json({ message: "Password successfully updated." });
+    res.status(201).json({ message: "Password reset successfully." });
   } catch (error) {
     console.error("Password update error:", error);
     return errorHandler(error, req, res);
