@@ -120,11 +120,11 @@ module.exports.activateProduct = async (req, res) => {
     // check if product exists
     const product = await Product.findById(productId);
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(404).send({ error: "Product not found" });
     }
     // check if product is already active
     if (product.isActive) {
-      return res.status(400).json({
+      return res.status(400).send({
         message: "Product is already active",
         activateProduct: product,
       });
@@ -132,7 +132,7 @@ module.exports.activateProduct = async (req, res) => {
       // Activate the product
       product.isActive = true;
       await product.save();
-      return res.status(200).json({
+      return res.status(200).send({
         message: "Product activated successfully",
         success: true,
       });
