@@ -65,6 +65,7 @@ module.exports.loginUser = async (req, res) => {
                 error: "Email and password does not match",
               });
             } else {
+              console.log(user)
               const accessToken = createAccessToken(user);
               return res.status(200).json({
                 access: accessToken,
