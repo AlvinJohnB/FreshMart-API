@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 module.exports.createAccessToken = (user) => {
   // payload - the data we want to include to our token

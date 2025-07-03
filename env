@@ -1,3 +1,0 @@
-PORT=4000
-MONGODB_URI=mongodb+srv://admin:admin123@wdc028-course-booking.svt33hq.mongodb.net/csp2?retryWrites=true&w=majority&appName=WDC028-Course-Booking
-JWT_SECRET=ECommerceAPI
