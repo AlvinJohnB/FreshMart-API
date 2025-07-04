@@ -101,7 +101,7 @@ module.exports.userDetails = (req, res) => {
   return User.findById(req.user.id)
     .then((user) => {
       if (user === null)
-        return res.status(400).send({ message: "User not found" });
+        return res.status(404).send({ message: "User not found" });
       // 400 bad request
       else {
         user.password = "";
