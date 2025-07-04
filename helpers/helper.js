@@ -17,6 +17,19 @@ module.exports.checkUserExistInCart = (req,res,userID) => {
 };
 
 
+module.exports.checkUserExistInUser = (req,res,userID) => {
+	return User.findOne({_id : userID })
+    .then(result => {
+        if (result) {
+            return result._id;
+        } else {
+            return false;
+        };
+    })
+    .catch(error => errorHandler(error, req, res));
+};
+
+
 module.exports.checkCartHasThisProductId = (req,res,cartID,productIdToCheck) => {
 	return Cart.findById(cartID)
 	.then(result => {

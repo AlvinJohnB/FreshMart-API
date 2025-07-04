@@ -2,7 +2,7 @@ const Cart = require("../models/Cart");
 const User = require("../models/User");
 const Product = require("../models/Product");
 const { errorHandler } = require("../middleware/errorHandler");
-const { checkUserExistInCart, checkCartHasThisProductId } = require("../helpers/helper");
+const { checkUserExistInCart, checkCartHasThisProductId, checkUserExistInUser } = require("../helpers/helper");
 
 
 
@@ -11,10 +11,13 @@ module.exports.addToCart = async (req, res) => {
   	const { userId, cartItems } = req.body;
   	const cartID = await checkUserExistInCart(req,res,userIDFromToken)
   	
-  	
+  	try {
+	    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+	      return res.status(400).json({ message: 'Cart must contain at least one item.' });
+    }
+
   	let errorsArray = [];
 
-  
   	if(cartID){ //<< if cart id is present
   		
   		// 
@@ -28,7 +31,7 @@ module.exports.addToCart = async (req, res) => {
 			    continue;
 			  } 
 
-				  const subtotal = product.price * item.quantity;
+				  const subtotal = Number((product.price * item.quantity).toFixed(2));
 				  let cart = await Cart.findOne({ userId });
 
 				  const isDuplicate = await checkCartHasThisProductId(req, res, cartID, itemProduct);
@@ -67,65 +70,98 @@ module.exports.addToCart = async (req, res) => {
 
   	}else{ //<<if cart id is not present
   		console.log("normal entry");
-  		addToCartNormal(res,req, userId, cartItems)
+  		addToCartNormal(req,res, userId, cartItems)
   	}
+
+
+  }catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Failed to create cart' });
+  }
 
 };
 
 
 
-const addToCartNormal = async (res,req, userId, cartItems) => {
+const addToCartNormal = async (req, res, userId, cartItems) => {
+	const userIDFromToken = req.user.id; 
+  let errorsArray = [];
+
+  const userID = await checkUserExistInUser(req,res,userIDFromToken);
+
+	if (!userID) {
+	return res.status(400).send({message: "User not found."})
+	}
+
 	try {
-  		      if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-  		        return res.status(400).json({ message: 'Cart must contain at least one item.' });
-  		      }
+				if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+				return res.status(400).json({ message: 'Cart must contain at least one item.' });
+				}
 
-  		      let totalPrice = 0;
+		    	let totalPrice = 0;
 
-  		      // Calculate subtotal for each item
-  		      const updatedItems = await Promise.all(
-  		        cartItems.map(async (item) => {
-  		          const product = await Product.findById(item.productId);
-  		          if (!product) {
-  		            throw new Error(`Product not found: ${item.productId}`);
-  		          }
+			    // Calculate subtotal for each item
+			    const updatedItemsRaw = await Promise.all(
+			      cartItems.map(async (item) => {
+			        const product = await Product.findById(item.productId);
 
-  		          const subtotal = product.price * item.quantity;
-  		          totalPrice += subtotal;
+			        if (!product) {
+			          errorsArray.push({ productId: item.productId, error: 'Product not found' });
+			          return null; // Use null as a marker to skip this item
+			        }
 
-  		          return {
-  		            productId: item.productId,
-  		            quantity: item.quantity,
-  		            subtotal,
-  		          };
-  		        })
-  		      );
+			        const subtotal = Number((product.price * item.quantity).toFixed(2));
+			        totalPrice += subtotal;
 
-  		      const newCart = new Cart({
-  		        userId,
-  		        cartItems: updatedItems,
-  		        totalPrice,
-  		      });
+			        return {
+			          productId: item.productId,
+			          quantity: item.quantity,
+			          subtotal,
+			        };
+			      })
+			    );
 
-  		      const savedCart = await newCart.save();
+			    // Filter out nulls (products not found)
+			    const updatedItems = updatedItemsRaw.filter(item => item !== null);
 
-  		      res.status(201).json({
-  		      	message: "Item added to cart succesfully",
-  		      	cart:savedCart
-  		      });
-  		    } catch (error) {
-  		      console.error(error);
-  		      res.status(500).json({ message: error.message || 'Failed to create cart' });
-  		    }
-}
+			    // Recalculate totalPrice safely
+			    totalPrice = Number(updatedItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
+
+			    const newCart = new Cart({
+			      userId,
+			      cartItems: updatedItems,
+			      totalPrice,
+			    });
+
+			    const savedCart = await newCart.save();
+
+			    res.status(201).json({
+			      message: "Item(s) added to cart successfully",
+			      cart: savedCart,
+			      errors: errorsArray.length > 0 ? errorsArray : null
+			    });
+
+	  } catch (error) {
+	    console.error(error);
+	    res.status(500).json({ message: error.message || 'Failed to create cart' });
+	  }
+};
+
 
 const updateCartItems = async (res,req, userId, cartItems) => {}
 
 
 module.exports.getCart = async (req, res) => {
+	const { userId } = req.body;
   try {
-    const products = await Cart.find();
-    res.status(200).json(products);
+    const products = await Cart.findOne({ userId });
+
+    if (products == null) {
+    	res.status(400).json({message: "No cart found."});
+    }else{
+    	res.status(200).json({cart: products});
+    }
+    
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ message: "Server error while fetching products" });
