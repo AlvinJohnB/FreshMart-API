@@ -3,10 +3,10 @@ const Cart = require("../models/Cart");
 const { errorHandler } = require("../middleware/errorHandler");
 
 
-module.exports.checkUserExistInCart = (userID) => {
+module.exports.checkUserExistInCart = (req,res,userID) => {
 	return Cart.findOne({ userId : userID })
     .then(result => {
-    console.log(result)
+    console.log("checkUserExistInCart "+ result)
         if (result) {
             return result._id;
         } else {
@@ -17,13 +17,13 @@ module.exports.checkUserExistInCart = (userID) => {
 };
 
 
-module.exports.checkCartHasThisProductId = (productIdToCheck) => {
-	Cart.findById(productIdToCheck)
+module.exports.checkCartHasThisProductId = (req,res,cartID,productIdToCheck) => {
+	return Cart.findById(cartID)
 	.then(result => {
-		console.log(result)
-		return result.some(item => item.productId.toString() === productIdToCheck.toString());
+		const currentCartItems = result.cartItems;
+		return currentCartItems.some(item => item.productId.toString() === productIdToCheck.toString());
 	})
-	
+	.catch(error => errorHandler(error, req, res));
 };
 
 
