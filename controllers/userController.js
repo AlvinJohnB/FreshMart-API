@@ -7,18 +7,27 @@ const { createAccessToken } = require("../middleware/auth");
 module.exports.registerUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, mobileNo } = req.body;
+    // Validate email format
+    if (!email.includes("@")) {
+      return res.status(400).json({ message: "Invalid email format." });
+    }
+
+    // check if mobileNo is valid
+    if (!/^\d{11}$/.test(mobileNo)) {
+      return res.status(400).json({ message: "Mobile number is invalid." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters.",
+      });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         message: "User already exists",
-      });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({
-        message: "Password must be at least 8 characters.",
       });
     }
 

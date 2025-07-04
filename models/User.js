@@ -30,7 +30,6 @@ const userSchema = new mongoose.Schema({
   mobileNo: {
     type: String,
     required: [true, "Mobile number is required"],
-    match: [/^\d{11}$/, "Mobile number is invalid."],
   },
 });
 
