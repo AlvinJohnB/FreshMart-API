@@ -4,22 +4,20 @@ const { errorHandler } = require("../middleware/errorHandler");
 // POST /products - Create a new product
 module.exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, isActive } = req.body;
+    const { name, description, price } = req.body;
 
     // Create a new product instance
     const product = new Product({
       name,
       description,
       price,
-      isActive,
     });
 
     // Save to database
     const savedProduct = await product.save();
-    res.status(201).json(savedProduct);
+    return res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(400).json({ message: error.message });
+    errorHandler(error, req, res);
   }
 };
 
@@ -97,7 +95,7 @@ module.exports.archiveProduct = async (req, res) => {
 
     // Check if product is already archived
     if (!product.isActive) {
-      return res.status(400).send({
+      return res.status(200).json({
         message: "Product is already archived",
         archivedProduct: product,
       });
@@ -107,7 +105,7 @@ module.exports.archiveProduct = async (req, res) => {
     product.isActive = false;
     await product.save();
 
-    return res.status(200).send({
+    return res.status(200).json({
       message: "Product archived successfully",
       success: true,
     });
@@ -128,7 +126,7 @@ module.exports.activateProduct = async (req, res) => {
     }
     // check if product is already active
     if (product.isActive === true) {
-      return res.status(400).send({
+      return res.status(200).json({
         message: "Product is already active",
         activateProduct: product,
       });
