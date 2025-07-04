@@ -13,7 +13,10 @@ module.exports.registerUser = async (req, res) => {
     }
 
     // check if mobileNo is valid
-    if (!/^\d{11}$/.test(mobileNo)) {
+    // if (!/^\d{11}$/.test(mobileNo)) {
+    //   return res.status(400).json({ message: "Mobile number is invalid." });
+    // }
+    if (mobileNo.length !== 11) {
       return res.status(400).json({ message: "Mobile number is invalid." });
     }
 
