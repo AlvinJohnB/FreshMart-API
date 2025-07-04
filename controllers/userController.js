@@ -16,6 +16,12 @@ module.exports.registerUser = async (req, res) => {
       });
     }
 
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters.",
+      });
+    }
+
     // Create new user
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
@@ -51,13 +57,13 @@ module.exports.loginUser = async (req, res) => {
   }
   //   Check if email is valid email format
   if (!/\S+@\S+\.\S+/.test(email)) {
-    return res.status(400).json({ error: "Invalid email." });
+    return res.status(400).json({ message: "Invalid email." });
   } else {
     User.findOne({ email })
       .then((user) => {
         if (!user) {
           return res.status(404).json({
-            error: "No Email Found",
+            message: "No Email Found",
           });
         } else {
           //   Check if password matches
@@ -67,7 +73,7 @@ module.exports.loginUser = async (req, res) => {
             }
             if (!isMatch) {
               return res.status(400).json({
-                error: "Email and password does not match",
+                message: "Email and password does not match",
               });
             } else {
               console.log(user);
@@ -110,7 +116,8 @@ module.exports.userDetails = (req, res) => {
 module.exports.makeAdmin = async (req, res) => {
   try {
     const userToUpdate = await User.findById(req.params.id);
-    if (!userToUpdate) return res.status(404).json({ error: "User not found" });
+    if (!userToUpdate)
+      return res.status(404).json({ message: "User not found" });
 
     userToUpdate.isAdmin = true;
     await userToUpdate.save();
@@ -146,7 +153,6 @@ module.exports.updatePassword = async (req, res) => {
 
     res.status(201).json({ message: "Password reset successfully." });
   } catch (error) {
-    console.error("Password update error:", error);
     return errorHandler(error, req, res);
   }
 };
