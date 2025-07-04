@@ -85,32 +85,36 @@ module.exports.updateProduct = async (req, res) => {
 };
 
 module.exports.archiveProduct = async (req, res) => {
-  let productId = req.params.productId;
-  return Product.findById(productId)
-    .then((product) => {
-      if (!product) {
-        return res.status(404).send({ message: "Product not found" });
-      }
-      // check if product is already archived
-      if (!product.isActive) {
-        return res.status(400).send({
-          message: "Product is already archived",
-          archivedProduct: product,
-        });
-      } else {
-        // Archive the product
-        product.isActive = false;
-        return product.save().then(() => {
-          return res.status(200).send({
-            message: "Product archived successfully",
-            success: true,
-          });
-        });
-      }
-    })
-    .catch((error) => {
-      errorHandler(error, req, res);
+  try {
+    const productId = req.params.productId;
+
+    // Find the product
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).send({ message: "Product not found" });
+    }
+
+    // Check if product is already archived
+    if (!product.isActive) {
+      return res.status(400).send({
+        message: "Product is already archived",
+        archivedProduct: product,
+      });
+    }
+
+    // Archive the product
+    product.isActive = false;
+    await product.save();
+
+    return res.status(200).send({
+      message: "Product archived successfully",
+      success: true,
     });
+  } catch (error) {
+    console.error("Error archiving product:", error);
+    return errorHandler(error, req, res);
+  }
 };
 
 module.exports.activateProduct = async (req, res) => {
@@ -123,7 +127,7 @@ module.exports.activateProduct = async (req, res) => {
       return res.status(404).send({ error: "Product not found" });
     }
     // check if product is already active
-    if (product.isActive) {
+    if (product.isActive === true) {
       return res.status(400).send({
         message: "Product is already active",
         activateProduct: product,
