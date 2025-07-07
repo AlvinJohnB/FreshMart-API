@@ -143,3 +143,47 @@ module.exports.activateProduct = async (req, res) => {
     errorHandler(error, req, res);
   }
 };
+
+module.exports.searchByName = async (req, res) => {
+
+  const productName = req.body.name;
+
+  if (productName == null || productName == '') {
+    return res.status(400).send({error: `Product name is required.`});
+  }
+
+  try {
+    // check if product exists
+    const product = await Product.findOne({name:productName});
+    if (!product) {
+      return res.status(404).send({ error: "Product not found" });
+    }
+    else {
+      return res.status(200).send(product);
+    }
+  } catch (error) {
+    errorHandler(error, req, res);
+  }
+};
+
+
+module.exports.searchByPrice = async (req, res) => {
+  const { minPrice, maxPrice } = req.body;
+
+  if (minPrice == null || maxPrice == null) {
+    return res.status(400).json({ message: 'Both minPrice and maxPrice are required.' });
+  }
+  try {
+    const product = await Product.find({
+      price: { $gte: minPrice, $lte: maxPrice }
+    });
+      if (product.length === 0) {
+      return res.status(400).json({ error: `Product range ${minPrice} - ${maxPrice} not found.` });
+      }else{
+         return res.status(200).json(product);
+      }
+
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error });
+  }
+};
