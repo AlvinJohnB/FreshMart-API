@@ -3,8 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const userRoutes = require("./routes/userRoutes");
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
+const productRoutes = require("./routes/productRoutes");
+const cartRoutes = require("./routes/cartRoutes");
 const { errorHandler } = require("./middleware/errorHandler");
 
 // Initialize express app
@@ -24,8 +24,8 @@ mongoose
 
 // Routes
 app.use("/users", userRoutes);
-app.use('/products', productRoutes);
-app.use('/carts', cartRoutes);
+app.use("/products", productRoutes);
+app.use("/cart", cartRoutes);
 
 // Error Handling Middleware
 app.use(errorHandler);
