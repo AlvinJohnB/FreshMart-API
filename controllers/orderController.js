@@ -60,7 +60,12 @@ module.exports.myOrders = async (req, res) => {
 
 module.exports.allOrders = async (req, res) => {
   try {
-    return true;
+    // find all orders
+    const allOrders = await Order.find();
+    if (!allOrders || allOrders.length === 0) {
+      return res.status(404).json({ message: "No orders found" });
+    }
+    return res.status(200).json({ orders: allOrders });
   } catch (error) {
     errorHandler(error, req, res);
   }
