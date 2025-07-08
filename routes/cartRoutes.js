@@ -11,6 +11,12 @@ router.patch(
   cartController.updateCartQuantity
 );
 
+router.patch(
+  "/:productId/remove-from-cart",
+  verify,
+  cartController.removeFromCart
+);
+
+router.put("/clear-cart", verify, cartController.clearCart);
+
 module.exports = router;
-
-

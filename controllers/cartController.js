@@ -135,3 +135,64 @@ module.exports.updateCartQuantity = async (req, res) => {
     return errorHandler(error, req, res);
   }
 };
+
+module.exports.removeFromCart = async (req, res) => {
+  const userId = req.user.id;
+  const { productId } = req.params;
+
+  const cart = await Cart.findOne({ userId });
+
+  if (!cart) {
+    return res.status(404).json({ message: "Cart not found" });
+  }
+
+  const productIndex = cart.cartItems.findIndex(
+    (item) => item.productId.toString() === productId
+  );
+
+  if (productIndex === -1) {
+    return res.status(404).json({ message: "Item not found in cart" });
+  }
+
+  // Remove the item from the cart
+  cart.cartItems.splice(productIndex, 1);
+
+  // Recalculate total price
+  cart.totalPrice = cart.cartItems.reduce(
+    (total, item) => total + item.subtotal,
+    0
+  );
+
+  await cart.save();
+  return res.status(200).json({
+    message: "Item removed from cart successfully",
+    updatedCart: cart,
+  });
+};
+
+module.exports.clearCart = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+    if (cart.cartItems.length === 0) {
+      return res.status(200).json({
+        message: "Cart is already empty",
+        updatedCart: cart,
+      });
+    }
+    // Clear the cart items and reset total price
+    cart.cartItems = [];
+    cart.totalPrice = 0;
+    await cart.save();
+    return res.status(200).json({
+      message: "Cart cleared successfully",
+      updatedCart: cart,
+    });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+};
