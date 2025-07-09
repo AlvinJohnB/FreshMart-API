@@ -32,11 +32,11 @@ app.use("/orders", orderRoutes);
 // Error Handling Middleware
 app.use(errorHandler);
 
-// if (require.main === module) {
-//   app.listen(process.env.PORT || 3000, () => {
-//     console.log(`API is now online on port ${process.env.PORT || 3000}`);
-//   });
-// }
+if (require.main === module) {
+  app.listen(process.env.PORT || 3000, () => {
+    console.log(`API is now online on port ${process.env.PORT || 3000}`);
+  });
+}
 
 // exports an object containing the value of the "app" variable only used for grading
 module.exports = { app, mongoose };

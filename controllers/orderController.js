@@ -12,12 +12,12 @@ module.exports.checkout = async (req, res) => {
     const cart = await Cart.findOne({ userId });
 
     if (!cart) {
-      return res.status(404).json({ message: "Cart not found" });
+      return res.status(200).json({ message: "Cart not found" });
     }
 
     // check if cart is empty
     if (cart.items.length === 0) {
-      return res.status(400).json({ message: "No items to checkout" });
+      return res.status(200).json({ message: "No items to checkout" });
     }
 
     // create order
