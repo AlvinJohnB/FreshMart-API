@@ -114,10 +114,16 @@ module.exports.updateCartQuantity = async (req, res) => {
       // Remove the item if quantity is 0
       cart.cartItems.splice(productIndex, 1);
     } else {
+      // Fetch the product to get the current price
+      const productDetails = await Product.findById(productId);
+      if (!productDetails) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
       // Update quantity and subtotal
       const product = cart.cartItems[productIndex];
       product.quantity = newQuantity;
-      product.subtotal = product.quantity * product.price;
+      product.subtotal = product.quantity * productDetails.price;
     }
 
     // Recalculate total price
