@@ -9,12 +9,7 @@ const productController = require("../controllers/productController");
 router.get("/all", verify, verifyAdmin, productController.getAllProducts);
 
 // POST a new product
-router.post(
-  "/",
-  verify,
-  verifyAdmin,
-  productController.createProduct
-);
+router.post("/", verify, verifyAdmin, productController.createProduct);
 
 // GET all active products
 router.get("/active", productController.getActiveProducts);
@@ -42,14 +37,8 @@ router.patch(
   productController.activateProduct
 );
 
-router.post(
-  "/search-by-name",
-  productController.searchByName
-);
+router.post("/search-by-name", productController.searchByName);
 
-router.post(
-  "/search-by-price",
-  productController.searchByPrice
-);
+router.post("/search-by-price", productController.searchByPrice);
 
 module.exports = router;

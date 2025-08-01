@@ -27,7 +27,7 @@ module.exports.getAllProducts = async (req, res) => {
     const products = await Product.find();
     res.status(200).json(products);
   } catch (error) {
-    console.error("Error fetching products:", error);
+    errorHandler(error, req, res);
     res.status(500).json({ message: "Server error while fetching products" });
   }
 };
@@ -145,20 +145,21 @@ module.exports.activateProduct = async (req, res) => {
 };
 
 module.exports.searchByName = async (req, res) => {
-
   const productName = req.body.name;
 
-  if (productName == null || productName == '') {
-    return res.status(400).send({error: `Product name is required.`});
+  if (productName == null || productName == "") {
+    return res.status(400).send({ error: `Product name is required.` });
   }
 
   try {
     // check if product exists
-    const product = await Product.findOne({name:productName});
+    // Use case-insensitive search for better matching
+    const product = await Product.find({
+      name: { $regex: new RegExp(productName, "i") },
+    });
     if (!product) {
       return res.status(404).send({ error: "Product not found" });
-    }
-    else {
+    } else {
       return res.status(200).send(product);
     }
   } catch (error) {
@@ -166,24 +167,26 @@ module.exports.searchByName = async (req, res) => {
   }
 };
 
-
 module.exports.searchByPrice = async (req, res) => {
   const { minPrice, maxPrice } = req.body;
 
   if (minPrice == null || maxPrice == null) {
-    return res.status(400).json({ message: 'Both minPrice and maxPrice are required.' });
+    return res
+      .status(400)
+      .json({ message: "Both minPrice and maxPrice are required." });
   }
   try {
     const product = await Product.find({
-      price: { $gte: minPrice, $lte: maxPrice }
+      price: { $gte: minPrice, $lte: maxPrice },
     });
-      if (product.length === 0) {
-      return res.status(400).json({ error: `Product range ${minPrice} - ${maxPrice} not found.` });
-      }else{
-         return res.status(200).json(product);
-      }
-
+    if (product.length === 0) {
+      return res
+        .status(400)
+        .json({ error: `Product range ${minPrice} - ${maxPrice} not found.` });
+    } else {
+      return res.status(200).json(product);
+    }
   } catch (error) {
-    return res.status(500).json({ message: 'Server error', error });
+    return res.status(500).json({ message: "Server error", error });
   }
 };

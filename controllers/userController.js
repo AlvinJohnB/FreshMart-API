@@ -88,7 +88,6 @@ module.exports.loginUser = async (req, res) => {
                 message: "Email and password does not match",
               });
             } else {
-              console.log(user);
               const accessToken = createAccessToken(user);
               return res.status(200).json({
                 access: accessToken,
@@ -105,7 +104,6 @@ module.exports.loginUser = async (req, res) => {
 
 // s51
 module.exports.userDetails = (req, res) => {
-  console.log("User ID from request:", req.user.id);
   if (!req.user.id) {
     return res.status(404).send({ message: "User not found" }); // 404 not found
   }

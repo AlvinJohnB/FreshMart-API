@@ -6,29 +6,29 @@ const { errorHandler } = require("../middleware/errorHandler");
 const { checkUserExistInCart } = require("../helpers/helper");
 
 module.exports.checkout = async (req, res) => {
-  const { userId } = req.user.id;
+  const userId = req.user.id;
   try {
     // find user cart
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId: userId });
 
     if (!cart) {
       return res.status(200).json({ message: "Cart not found" });
     }
 
     // check if cart is empty
-    if (cart.items.length === 0) {
+    if (cart.cartItems.length === 0) {
       return res.status(200).json({ message: "No items to checkout" });
     }
 
     // create order
     const order = new Order({
       userId,
-      productsOrdered: cart.items.map((item) => ({
+      productsOrdered: cart.cartItems.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
         subtotal: item.subtotal,
       })),
-      total: cart.total,
+      totalPrice: cart.totalPrice,
     });
 
     await order.save();
@@ -48,7 +48,10 @@ module.exports.myOrders = async (req, res) => {
   const userId = req.user.id;
   try {
     // find orders for the user
-    const userOrders = await Order.find({ userId });
+    const userOrders = await Order.find({ userId })
+      .sort({ orderedOn: -1 })
+      .populate("productsOrdered.productId", "name");
+
     if (!userOrders || userOrders.length === 0) {
       return res.status(200).json({ message: "No orders found for this user" });
     }
@@ -61,7 +64,9 @@ module.exports.myOrders = async (req, res) => {
 module.exports.allOrders = async (req, res) => {
   try {
     // find all orders
-    const allOrders = await Order.find();
+    const allOrders = await Order.find()
+      .populate("userId", "name email")
+      .sort({ orderedOn: -1 });
     if (!allOrders || allOrders.length === 0) {
       return res.status(404).json({ message: "No orders found" });
     }

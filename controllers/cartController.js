@@ -18,8 +18,8 @@ module.exports.addToCart = async (req, res) => {
       );
       if (productIndex !== -1) {
         // If product exists, update the quantity and subtotal
-        cart.cartItems[productExists].quantity += quantity;
-        cart.cartItems[productExists].subtotal += subtotal;
+        cart.cartItems[productIndex].quantity += quantity;
+        cart.cartItems[productIndex].subtotal += subtotal;
         cart.totalPrice += subtotal; // Update total price
         //   save the updated cart
         await cart.save();
@@ -69,11 +69,15 @@ module.exports.addToCart = async (req, res) => {
 };
 
 module.exports.getCart = async (req, res) => {
-  const { userId } = req.user.id;
+  const userId = req.user.id;
   try {
-    const products = await Cart.findOne({ userId });
+    const products = await Cart.findOne({ userId: userId }).populate({
+      path: "cartItems.productId",
+      model: "Product",
+      select: "name price",
+    });
 
-    if (products == null) {
+    if (products === null) {
       res.status(200).json({ message: "No cart found." });
     } else {
       res.status(200).json({ cart: products });
